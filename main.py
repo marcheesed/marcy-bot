@@ -50,32 +50,26 @@ pronoun_roles = load_roles("pronouns.txt")
 boundary_roles = load_roles("boundaries.txt")
 
 
-# --- Create or update roles ---
+# --- Create or update roles safely ---
 async def ensure_roles_exist(guild):
+    # Fetch all roles from the API to avoid cache issues
+    existing_roles = await guild.fetch_roles()
+
     for roles_dict in [color_roles, pronoun_roles, boundary_roles]:
         for emoji, data in roles_dict.items():
-            existing = discord.utils.get(guild.roles, name=data["name"])
-            if not existing:
-                await guild.create_role(
-                    name=data["name"], color=discord.Color(data["color"])
-                )
+            role_name = data["name"].strip()  # Remove extra whitespace
+            role_color = discord.Color(data["color"])
+
+            # Check if the role already exists
+            existing = discord.utils.get(existing_roles, name=role_name)
+
+            if existing:
+                # Update color if it differs
+                if existing.color != role_color:
+                    await existing.edit(color=role_color)
             else:
-                if existing.color.value != data["color"]:
-                    await existing.edit(color=discord.Color(data["color"]))
-
-
-# --- Helper: read/write tracked message IDs ---
-def get_tracked_ids():
-    try:
-        with open("tracked_message.txt", "r") as f:
-            return [int(x.strip()) for x in f.readlines() if x.strip()]
-    except FileNotFoundError:
-        return []
-
-
-def save_tracked_id(message_id):
-    with open("tracked_message.txt", "a") as f:
-        f.write(str(message_id) + "\n")
+                # Create the role if it doesn't exist
+                await guild.create_role(name=role_name, color=role_color)
 
 
 # --- Command to post the reaction messages ---
@@ -150,14 +144,14 @@ async def postpronouns(ctx):
 async def postroles(ctx):
     await ensure_roles_exist(ctx.guild)
 
-    emojis = list(reaction_roles.keys())
+    emojis = list(color_roles.keys())
     chunk_size = 8
 
     for i in range(0, len(emojis), chunk_size):
         chunk = emojis[i : i + chunk_size]
         description = "React to get a color role:\n\n"
         for emoji in chunk:
-            data = reaction_roles[emoji]
+            data = color_roles[emoji]
             description += f"{emoji} — {data['name']}\n"
 
         embed = discord.Embed(
