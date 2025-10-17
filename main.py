@@ -145,7 +145,7 @@ async def on_raw_reaction_remove(payload):
         role = discord.utils.get(guild.roles, name=role_name)
         if role:
             await member.remove_roles(role)
-            print(f"❌ Removed {role.name} from {member.display_name}")
+            print(f"Removed {role.name} from {member.display_name}")
 
 
 bot.run(TOKEN)

@@ -1,9 +1,9 @@
 import os
 import threading
 from flask import Flask
-from main import bot, DISCORD_TOKEN  # import your bot instance and token
+from main import bot, DISCORD_TOKEN
 
-# --- Flask app ---
+# Flask app
 app = Flask(__name__)
 
 
@@ -13,12 +13,12 @@ def home():
 
 
 def run_flask():
-    port = int(os.environ.get("PORT", 10000))  # Render assigns $PORT automatically
+    port = int(os.environ.get("PORT", 10000))  # use Render's assigned port
     app.run(host="0.0.0.0", port=port)
 
 
-# --- Start Flask in a separate thread ---
-threading.Thread(target=run_flask).start()
+# Start Flask in daemon thread
+threading.Thread(target=run_flask, daemon=True).start()
 
-# --- Run Discord bot ---
+# Run Discord bot
 bot.run(DISCORD_TOKEN)
