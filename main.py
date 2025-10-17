@@ -73,22 +73,8 @@ async def ensure_roles_exist(guild):
 
 
 # --- Command to post the reaction messages ---
-
-
 @bot.command()
 async def postboundaries(ctx):
-    # Ensure these roles exist
-    for emoji, data in boundary_roles.items():
-        existing = discord.utils.get(ctx.guild.roles, name=data["name"])
-        if not existing:
-            await ctx.guild.create_role(
-                name=data["name"], color=discord.Color(data["color"])
-            )
-        else:
-            if existing.color.value != data["color"]:
-                await existing.edit(color=discord.Color(data["color"]))
-
-    # Post messages
     emojis = list(boundary_roles.keys())
     chunk_size = 8
 
@@ -106,9 +92,16 @@ async def postboundaries(ctx):
         )
         message = await ctx.send(embed=embed)
 
+        # Add reactions safely with delay
         for emoji in chunk:
-            await message.add_reaction(emoji)
-            save_tracked_id(message.id)
+            try:
+                await message.add_reaction(emoji)
+                await asyncio.sleep(0.5)  # avoid rate limits
+            except Exception as e:
+                print(f"Failed to add reaction {emoji}: {e}")
+
+        # Save message ID once
+        save_tracked_id(message.id)
 
 
 @bot.command()
