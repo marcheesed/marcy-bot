@@ -52,7 +52,7 @@ boundary_roles = load_roles("boundaries.txt")
 
 # --- Create or update roles ---
 async def ensure_roles_exist(guild):
-    for roles_dict in [color_roles, pronoun_roles]:
+    for roles_dict in [color_roles, pronoun_roles, boundary_roles]:
         for emoji, data in roles_dict.items():
             existing = discord.utils.get(guild.roles, name=data["name"])
             if not existing:
